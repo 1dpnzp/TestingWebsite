@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biodiversity Events Calendar</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2d5016 0%, #4a7c2c 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.95;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4a7c2c;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .main-content {
+            display: flex;
+            min-height: 600px;
+        }
+
+        .sidebar {
+            width: 300px;
+            background: #f8f9fa;
+            padding: 30px;
+            border-right: 1px solid #e0e0e0;
+            overflow-y: auto;
+        }
+
+        .filter-section {
+            margin-bottom: 30px;
+        }
+
+        .filter-section h3 {
+            font-size: 0.9em;
+            text-transform: uppercase;
+            color: #666;
+            margin-bottom: 12px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .filter-option {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-option:hover {
+            color: #4a7c2c;
+        }
+
+        .filter-option input[type="checkbox"] {
+            margin-right: 10px;
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+        }
+
+        .filter-option label {
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .category-badge {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .clear-filters {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: 600;
+            margin-top: 20px;
+            transition: all 0.2s;
+        }
+
+        .clear-filters:hover {
+            background: #c0392b;
+            transform: translateY(-1px);
+        }
+
+        .events-area {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .results-count {
+            color: #666;
+            font-size: 0.95em;
+        }
+
+        .sort-select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.9em;
+            cursor: pointer;
+        }
+
+        .events-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 25px;
+        }
+
+        .event-card {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .event-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+        }
+
+        .event-image {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .event-content {
+            padding: 20px;
+        }
+
+        .event-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 10px;
+        }
+
+        .event-category {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .event-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            margin: 10px 0;
+            color: #2d3748;
+        }
+
+        .event-description {
+            color: #666;
+            font-size: 0.9em;
+            line-height: 1.5;
+            margin-bottom: 15px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .event-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            font-size: 0.85em;
+            color: #555;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .event-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+
+        .event-price {
+            font-weight: 700;
+            color: #2d5016;
+            font-size: 1.1em;
+        }
+
+        .event-type-badge {
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.75em;
+            font-weight: 600;
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: #999;
+        }
+
+        .empty-state svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .empty-state h3 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+            color: #666;
+        }
+
+        .error-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: #e74c3c;
+        }
+
+        .error-state h3 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+
+        /* Category colors */
+        .cat-birds { background: #3498db; }
+        .cat-land { background: #e67e22; }
+        .cat-ocean { background: #1abc9c; }
+        .cat-plants { background: #27ae60; }
+        .cat-climate { background: #e74c3c; }
+        .cat-nature { background: #95a5a6; }
+        .cat-sustainability { background: #16a085; }
+
+        @media (max-width: 968px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid #e0e0e0;
+            }
+
+            .events-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌍 Biodiversity Events Calendar</h1>
+            <p>Discover and attend events celebrating our planet's incredible diversity</p>
+        </div>
+
+        <div id="loadingState" class="loading">
+            <div class="loading-spinner"></div>
+            <p>Loading events from Google Sheets...</p>
+        </div>
+
+        <div id="errorState" class="error-state" style="display: none;">
+            <h3>⚠️ Unable to load events</h3>
+            <p>Please check that the Google Sheet is published and the URL is correct.</p>
+        </div>
+
+        <div id="mainContent" class="main-content" style="display: none;">
+            <div class="sidebar">
+                <div class="filter-section">
+                    <h3>Category</h3>
+                    <div id="categoryFilters"></div>
+                </div>
+
+                <div class="filter-section">
+                    <h3>Location</h3>
+                    <div class="filter-option">
+                        <input type="checkbox" id="local" data-filter="location" value="local">
+                        <label for="local">Local</label>
+                    </div>
+                    <div class="filter-option">
+                        <input type="checkbox" id="regional" data-filter="location" value="regional">
+                        <label for="regional">Regional</label>
+                    </div>
+                    <div class="filter-option">
+                        <input type="checkbox" id="global" data-filter="location" value="global">
+                        <label for="global">Online/Global</label>
+                    </div>
+                </div>
+
+                <div class="filter-section">
+                    <h3>Event Type</h3>
+                    <div class="filter-option">
+                        <input type="checkbox" id="online" data-filter="type" value="online">
+                        <label for="online">Online</label>
+                    </div>
+                    <div class="filter-option">
+                        <input type="checkbox" id="inperson" data-filter="type" value="inperson">
+                        <label for="inperson">In-Person</label>
+                    </div>
+                    <div class="filter-option">
+                        <input type="checkbox" id="hybrid" data-filter="type" value="hybrid">
+                        <label for="hybrid">Hybrid</label>
+                    </div>
+                </div>
+
+                <div class="filter-section">
+                    <h3>Format</h3>
+                    <div class="filter-option">
+                        <input type="checkbox" id="seminar" data-filter="format" value="seminar">
+                        <label for="seminar">Seminar/Talk</label>
+                    </div>
+                    <div class="filter-option">
+                        <input type="checkbox" id="class" data-filter="format" value="class">
+                        <label for="class">Class/Workshop</label>
+                    </div>
+                    <div class="filter-option">
+                        <input type="checkbox" id="hike" data-filter="format" value="hike">
+                        <label for="hike">Hike/Field Trip</label>
+                    </div>
+                    <div class="filter-option">
+                        <input type="checkbox" id="handson" data-filter="format" value="handson">
+                        <label for="handson">Hands-on Activity</label>
+                    </div>
+                </div>
+
+                <div class="filter-section">
+                    <h3>Audience</h3>
+                    <div class="filter-option">
+                        <input type="checkbox" id="families" data-filter="audience" value="families">
+                        <label for="families">Kids & Families</label>
+                    </div>
+                    <div class="filter-option">
+                        <input type="checkbox" id="adults" data-filter="audience" value="adults">
+                        <label for="adults">Teens & Adults</label>
+                    </div>
+                </div>
+
+                <div class="filter-section">
+                    <h3>Cost</h3>
+                    <div class="filter-option">
+                        <input type="checkbox" id="free" data-filter="cost" value="free">
+                        <label for="free">Free</label>
+                    </div>
+                    <div class="filter-option">
+                        <input type="checkbox" id="paid" data-filter="cost" value="paid">
+                        <label for="paid">Paid</label>
+                    </div>
+                </div>
+
+                <button class="clear-filters" onclick="clearFilters()">Clear All Filters</button>
+            </div>
+
+            <div class="events-area">
+                <div class="controls">
+                    <div class="results-count" id="resultsCount">Loading events...</div>
+                    <select class="sort-select" onchange="sortEvents(this.value)">
+                        <option value="date">Sort by: Date</option>
+                        <option value="title">Sort by: Title</option>
+                        <option value="price">Sort by: Price</option>
+                    </select>
+                </div>
+
+                <div class="events-grid" id="eventsGrid"></div>
+
+                <div class="empty-state" id="emptyState" style="display: none;">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <h3>No events found</h3>
+                    <p>Try adjusting your filters to see more results</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // CONFIGURATION: Replace this with your Google Sheets CSV export URL
+        const SHEET_URL = https://docs.google.com/spreadsheets/d/e/2PACX-1vQw9UFahts-8Wk2l5nG_8k2F-nlwipkCCrti05lrn-nDkVO_DZ2wqQT7xvHtvVa8jRjHLEKAvbGy_9d/pub?gid=0&single=true&output=csv;
+        
+        // If using the template I provide, the column order will match this mapping
+        const COLUMN_MAP = {
+            title: 0,
+            description: 1,
+            category: 2,
+            location: 3,
+            locationLabel: 4,
+            date: 5,
+            time: 6,
+            type: 7,
+            format: 8,
+            audience: 9,
+            cost: 10,
+            price: 11,
+            link: 12
+        };
+
+        const categoryConfig = {
+            'birds': { label: 'Birds', class: 'cat-birds' },
+            'land': { label: 'Land Animals', class: 'cat-land' },
+            'ocean': { label: 'Ocean Animals', class: 'cat-ocean' },
+            'plants': { label: 'Trees & Plants', class: 'cat-plants' },
+            'climate': { label: 'Climate', class: 'cat-climate' },
+            'nature': { label: 'Nature', class: 'cat-nature' },
+            'sustainability': { label: 'Sustainability', class: 'cat-sustainability' }
+        };
+
+        const typeConfig = {
+            'online': 'Online',
+            'inperson': 'In-Person',
+            'hybrid': 'Hybrid'
+        };
+
+        let allEvents = [];
+        let filteredEvents = [];
+
+        function parseCSV(text) {
+            const lines = text.split('\n');
+            const events = [];
+            
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue;
+                
+                const values = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+                
+                if (values.length >= 13 && values[COLUMN_MAP.title]) {
+                    const category = values[COLUMN_MAP.category].toLowerCase();
+                    const costValue = values[COLUMN_MAP.cost].toLowerCase();
+                    const priceText = values[COLUMN_MAP.price];
+                    
+                    events.push({
+                        title: values[COLUMN_MAP.title],
+                        description: values[COLUMN_MAP.description],
+                        category: category,
+                        categoryLabel: categoryConfig[category]?.label || category,
+                        categoryClass: categoryConfig[category]?.class || 'cat-nature',
+                        location: values[COLUMN_MAP.location].toLowerCase(),
+                        locationLabel: values[COLUMN_MAP.locationLabel],
+                        date: values[COLUMN_MAP.date],
+                        dateSort: values[COLUMN_MAP.date],
+                        time: values[COLUMN_MAP.time],
+                        type: values[COLUMN_MAP.type].toLowerCase(),
+                        typeLabel: typeConfig[values[COLUMN_MAP.type].toLowerCase()] || values[COLUMN_MAP.type],
+                        format: values[COLUMN_MAP.format].toLowerCase(),
+                        audience: values[COLUMN_MAP.audience].toLowerCase(),
+                        cost: costValue,
+                        price: priceText,
+                        priceValue: priceText.toLowerCase() === 'free' ? 0 : parseFloat(priceText.replace(/[^0-9.]/g, '')) || 0,
+                        link: values[COLUMN_MAP.link]
+                    });
+                }
+            }
+            
+            return events;
+        }
+
+        async function loadEventsFromSheet() {
+            try {
+                const response = await fetch(SHEET_URL);
+                if (!response.ok) throw new Error('Failed to fetch');
+                
+                const text = await response.text();
+                allEvents = parseCSV(text);
+                filteredEvents = [...allEvents];
+                
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('mainContent').style.display = 'flex';
+                
+                buildCategoryFilters();
+                renderEvents();
+                setupFilterListeners();
+            } catch (error) {
+                console.error('Error loading events:', error);
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('errorState').style.display = 'block';
+            }
+        }
+
+        function buildCategoryFilters() {
+            const categoriesInUse = [...new Set(allEvents.map(e => e.category))];
+            const container = document.getElementById('categoryFilters');
+            
+            categoriesInUse.forEach(cat => {
+                const config = categoryConfig[cat];
+                if (config) {
+                    const div = document.createElement('div');
+                    div.className = 'filter-option';
+                    div.innerHTML = `
+                        <input type="checkbox" id="${cat}" data-filter="category" value="${cat}">
+                        <label for="${cat}"><span class="category-badge ${config.class}"></span>${config.label}</label>
+                    `;
+                    container.appendChild(div);
+                }
+            });
+        }
+
+        function renderEvents() {
+            const grid = document.getElementById('eventsGrid');
+            const emptyState = document.getElementById('emptyState');
+            const resultsCount = document.getElementById('resultsCount');
+
+            if (filteredEvents.length === 0) {
+                grid.style.display = 'none';
+                emptyState.style.display = 'block';
+                resultsCount.textContent = 'No events found';
+                return;
+            }
+
+            grid.style.display = 'grid';
+            emptyState.style.display = 'none';
+            resultsCount.textContent = `Showing ${filteredEvents.length} event${filteredEvents.length !== 1 ? 's' : ''}`;
+
+            grid.innerHTML = filteredEvents.map(event => `
+                <div class="event-card" onclick="window.open('${event.link}', '_blank')">
+                    <div class="event-image"></div>
+                    <div class="event-content">
+                        <div class="event-header">
+                            <span class="event-category ${event.categoryClass}">${event.categoryLabel}</span>
+                        </div>
+                        <h3 class="event-title">${event.title}</h3>
+                        <p class="event-description">${event.description}</p>
+                        <div class="event-meta">
+                            <div class="meta-item">
+                                <span>📅</span>
+                                <span>${event.date} • ${event.time}</span>
+                            </div>
+                            <div class="meta-item">
+                                <span>📍</span>
+                                <span>${event.locationLabel}</span>
+                            </div>
+                        </div>
+                        <div class="event-footer">
+                            <span class="event-price">${event.price}</span>
+                            <span class="event-type-badge">${event.typeLabel}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function applyFilters() {
+            const filters = {
+                category: [],
+                location: [],
+                type: [],
+                format: [],
+                audience: [],
+                cost: []
+            };
+
+            document.querySelectorAll('input[type="checkbox"]:checked').forEach(checkbox => {
+                const filterType = checkbox.getAttribute('data-filter');
+                filters[filterType].push(checkbox.value);
+            });
+
+            filteredEvents = allEvents.filter(event => {
+                return (filters.category.length === 0 || filters.category.includes(event.category)) &&
+                       (filters.location.length === 0 || filters.location.includes(event.location)) &&
+                       (filters.type.length === 0 || filters.type.includes(event.type)) &&
+                       (filters.format.length === 0 || filters.format.includes(event.format)) &&
+                       (filters.audience.length === 0 || filters.audience.includes(event.audience)) &&
+                       (filters.cost.length === 0 || filters.cost.includes(event.cost));
+            });
+
+            renderEvents();
+        }
+
+        function clearFilters() {
+            document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            filteredEvents = [...allEvents];
+            renderEvents();
+        }
+
+        function sortEvents(sortBy) {
+            if (sortBy === 'date') {
+                filteredEvents.sort((a, b) => a.dateSort.localeCompare(b.dateSort));
+            } else if (sortBy === 'title') {
+                filteredEvents.sort((a, b) => a.title.localeCompare(b.title));
+            } else if (sortBy === 'price') {
+                filteredEvents.sort((a, b) => a.priceValue - b.priceValue);
+            }
+            renderEvents();
+        }
+
+        function setupFilterListeners() {
+            document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                checkbox.addEventListener('change', applyFilters);
+            });
+        }
+
+        loadEventsFromSheet();
+    </script>
+</body>
+</html>

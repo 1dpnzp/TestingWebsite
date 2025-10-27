@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biodiversity Events Calendar</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            padding: 60px 40px;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+            max-width: 600px;
+        }
+        h1 {
+            color: #2d5016;
+            margin-bottom: 20px;
+        }
+        p {
+            color: #666;
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+        .buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 15px 30px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-block;
+        }
+        .btn-primary {
+            background: #4a7c2c;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #2d5016;
+            transform: translateY(-2px);
+        }
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #333;
+        }
+        .btn-secondary:hover {
+            background: #d0d0d0;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌍 Biodiversity Events Calendar</h1>
+        <p>Choose which version you'd like to view:</p>
+        <div class="buttons">
+            <a href="live.html" class="btn btn-primary">
+                📊 Live Calendar<br>
+                <small>(Connected to Google Sheets)</small>
+            </a>
+            <a href="demo.html" class="btn btn-secondary">
+                🎨 Demo Version<br>
+                <small>(Sample events)</small>
+            </a>
+        </div>
+    </div>
+</body>
+</html>
