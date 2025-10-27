@@ -504,12 +504,30 @@
                 const line = lines[i].trim();
                 if (!line) continue;
                 
-                const values = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+                // Better CSV parsing that handles quoted fields
+                const values = [];
+                let current = '';
+                let inQuotes = false;
+                
+                for (let j = 0; j < line.length; j++) {
+                    const char = line[j];
+                    
+                    if (char === '"') {
+                        inQuotes = !inQuotes;
+                    } else if (char === ',' && !inQuotes) {
+                        values.push(current.trim());
+                        current = '';
+                    } else {
+                        current += char;
+                    }
+                }
+                values.push(current.trim());
                 
                 if (values.length >= 13 && values[COLUMN_MAP.title]) {
-                    const category = values[COLUMN_MAP.category].toLowerCase();
-                    const costValue = values[COLUMN_MAP.cost].toLowerCase();
-                    const priceText = values[COLUMN_MAP.price];
+                    const category = values[COLUMN_MAP.category].toLowerCase().trim();
+                    const costValue = values[COLUMN_MAP.cost].toLowerCase().trim();
+                    const priceText = values[COLUMN_MAP.price].trim();
+                    const formatValue = values[COLUMN_MAP.format].toLowerCase().trim().replace(/\s+/g, '');
                     
                     events.push({
                         title: values[COLUMN_MAP.title],
@@ -517,19 +535,19 @@
                         category: category,
                         categoryLabel: categoryConfig[category]?.label || category,
                         categoryClass: categoryConfig[category]?.class || 'cat-nature',
-                        location: values[COLUMN_MAP.location].toLowerCase(),
+                        location: values[COLUMN_MAP.location].toLowerCase().trim(),
                         locationLabel: values[COLUMN_MAP.locationLabel],
                         date: values[COLUMN_MAP.date],
                         dateSort: values[COLUMN_MAP.date],
                         time: values[COLUMN_MAP.time],
-                        type: values[COLUMN_MAP.type].toLowerCase(),
-                        typeLabel: typeConfig[values[COLUMN_MAP.type].toLowerCase()] || values[COLUMN_MAP.type],
-                        format: values[COLUMN_MAP.format].toLowerCase(),
-                        audience: values[COLUMN_MAP.audience].toLowerCase(),
+                        type: values[COLUMN_MAP.type].toLowerCase().trim(),
+                        typeLabel: typeConfig[values[COLUMN_MAP.type].toLowerCase().trim()] || values[COLUMN_MAP.type],
+                        format: formatValue,
+                        audience: values[COLUMN_MAP.audience].toLowerCase().trim(),
                         cost: costValue,
-                        price: priceText,
-                        priceValue: priceText.toLowerCase() === 'free' ? 0 : parseFloat(priceText.replace(/[^0-9.]/g, '')) || 0,
-                        link: values[COLUMN_MAP.link]
+                        price: priceText || 'Free',
+                        priceValue: priceText.toLowerCase() === 'free' || !priceText ? 0 : parseFloat(priceText.replace(/[^0-9.]/g, '')) || 0,
+                        link: values[COLUMN_MAP.link] || '#'
                     });
                 }
             }
