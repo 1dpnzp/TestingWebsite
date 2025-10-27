@@ -474,7 +474,8 @@
             audience: 9,
             cost: 10,
             price: 11,
-            link: 12
+            link: 12,
+            imageUrl: 13
         };
 
         const categoryConfig = {
@@ -528,6 +529,7 @@
                     const costValue = values[COLUMN_MAP.cost].toLowerCase().trim();
                     const priceText = values[COLUMN_MAP.price].trim();
                     const formatValue = values[COLUMN_MAP.format].toLowerCase().trim().replace(/\s+/g, '');
+                    const imageUrl = values[COLUMN_MAP.imageUrl] ? values[COLUMN_MAP.imageUrl].trim() : '';
                     
                     events.push({
                         title: values[COLUMN_MAP.title],
@@ -547,7 +549,8 @@
                         cost: costValue,
                         price: priceText || 'Free',
                         priceValue: priceText.toLowerCase() === 'free' || !priceText ? 0 : parseFloat(priceText.replace(/[^0-9.]/g, '')) || 0,
-                        link: values[COLUMN_MAP.link] || '#'
+                        link: values[COLUMN_MAP.link] || '#',
+                        imageUrl: imageUrl
                     });
                 }
             }
@@ -613,7 +616,10 @@
 
             grid.innerHTML = filteredEvents.map(event => `
                 <div class="event-card" onclick="window.open('${event.link}', '_blank')">
-                    <div class="event-image"></div>
+                    ${event.imageUrl ? 
+                        `<img src="${event.imageUrl}" alt="${event.title}" class="event-image" onerror="this.style.background='linear-gradient(135deg, #667eea 0%, #764ba2 100%)'; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22%3E%3C/svg%3E';">` : 
+                        `<div class="event-image"></div>`
+                    }
                     <div class="event-content">
                         <div class="event-header">
                             <span class="event-category ${event.categoryClass}">${event.categoryLabel}</span>
